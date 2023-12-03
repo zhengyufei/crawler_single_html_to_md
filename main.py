@@ -81,7 +81,12 @@ def get_md(url):
 
     # 在Markdown文本中，使用正则表达式替换所有的图片链接为本地路径
     for img_url, img_path in img_map.items():
-        markdown = re.sub(r'!\[.*?\]\(' + re.escape(img_url) + r'\)', '![](' + img_path + ')', markdown)
+        # 从绝对路径中提取出相对路径
+        parsed_url = urlparse(img_url)
+        relative_img_url = parsed_url.path
+
+        # 使用正则表达式替换图片的绝对路径和相对路径
+        markdown = re.sub(re.escape(img_url) + '|' + re.escape(relative_img_url), img_path, markdown)
 
     # 从第一个"h1"标签开始
     markdown_split = markdown.split("\n# ")
