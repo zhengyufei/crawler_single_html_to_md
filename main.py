@@ -53,31 +53,32 @@ def get_md(url):
             if img_url in img_map:
                 continue
 
-            # 下载图片并保存到本地
-            img_response = requests.get(img_url, stream=True)
-            img_response.raise_for_status()
+            try:
+                # 下载图片并保存到本地
+                img_response = requests.get(img_url, stream=True)
+                img_response.raise_for_status()
 
-            # 使用图片URL的最后一部分作为文件名
-            img_name = os.path.split(urlparse(img_url).path)[-1]  # 使用urlparse来移除查询参数
-            img_path = os.path.join(image_dir, img_name)
-            with open(img_path, 'wb') as f:
-                for chunk in img_response.iter_content(chunk_size=8192):
-                    f.write(chunk)
+                # 使用图片URL的最后一部分作为文件名
+                img_name = os.path.split(urlparse(img_url).path)[-1]  # 使用urlparse来移除查询参数
+                img_path = os.path.join(image_dir, img_name)
+                with open(img_path, 'wb') as f:
+                    for chunk in img_response.iter_content(chunk_size=8192):
+                        f.write(chunk)
 
-            # 将图片的本地路径和原始URL添加到映射关系中
-            img_map[img_url] = f"images/{img_name}"  # 这里图片的路径包括了 'images/' 文件夹
+                # 将图片的本地路径和原始URL添加到映射关系中
+                img_map[img_url] = f"images/{img_name}"  # 这里图片的路径包括了 'images/' 文件夹
+            except requests.exceptions.RequestException as e:
+                # 请求失败，打印错误信息，但不结束程序
+                print(f"Error occurred: {e}")
 
     # 将HTML转换为字符串
     body = str(soup)
-
-    # 使用unidecode转换Unicode字符为其ASCII等价物
-    body_ascii = unidecode(body)
 
     # 使用html2text转换HTML为Markdown
     h = html2text.HTML2Text()
     h.ignore_links = False  # 需要保留图片的链接
     h.body_width = 0
-    markdown = h.handle(body_ascii)
+    markdown = h.handle(body)
 
     # 在Markdown文本中，使用正则表达式替换所有的图片链接为本地路径
     for img_url, img_path in img_map.items():
